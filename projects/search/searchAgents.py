@@ -265,16 +265,6 @@ def euclideanHeuristic(position, problem, info={}):
 #####################################################
 # This portion is incomplete.  Time to write code!  #
 #####################################################
-
-# Hint: The only parts of the game state you need
-# to reference in your implementation are the starting
-# Pacman position and the location of the four corners.
-
-class PacmanCornerState:
-    def __init__(self, pos, corners):
-        self.pos = pos # tuples of position (x, y)
-        self.corners = [False for _ in range(len(corners))] # list of corners, true if closed, else false.
-
 class CornersProblem(search.SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
@@ -297,8 +287,16 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        # initialize start state
-        self.start_state = PacmanCornerState(self.startingPosition, self.corners)
+        # create new state structure [(x, y), [[(x, y), True]]] ...
+        self.state = [self.startingPosition]
+        self.nodes = []
+        for corner in self.corners:
+            if self.startingPosition == corner:
+                self.nodes.append([corner, True])
+            else:
+                self.nodes.append([corner, False])
+        self.state.append(self.nodes)
+        # print(self.state)
 
     def getStartState(self):
         """
@@ -306,18 +304,18 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return self.start_state
+        return self.state
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        # check left over
-        # if state.pos in self.corners:
-        #     state.corners.remove(state.pos)
-        self.update(state)
-        return False not in state.corners
+        # print('\n\n{}'.format(state))
+        for corner in state[1]:
+            if not corner[1]:
+                return False
+        return True
 
     def getSuccessors(self, state):
         """
@@ -329,15 +327,24 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
-        self.update(state)
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            x, y = state.pos
+            # Add a successor state to the successor list if the action is legal
+            # Here's a code snippet for figuring out whether a new position hits a wall:
+            (x, y), s = state[0], state[1]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
+            "*** YOUR CODE HERE ***"
             if not hitsWall:
-                successors.append((PacmanCornerState((nextx, nexty), state.corners), action, 1))
+                updated_state = []
+                for corner in s:
+                    if (nextx, nexty) == corner[0]:
+                        updated_state.append([corner[0], True])
+                    else:
+                        updated_state.append([corner[0], corner[1]])
+                successors.append([[(nextx, nexty), updated_state], action, 1])
+
         self._expanded += 1 # DO NOT CHANGE
         return successors
 
@@ -354,11 +361,6 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
-    def update(self, state):
-        for idx, pos in enumerate(self.corners):
-            if state.pos == pos:
-                state.corners[idx] = True
-                break
 
 def cornersHeuristic(state, problem):
     """
@@ -376,7 +378,10 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    
+    "*** YOUR CODE HERE ***"
+    for corner in state[1]:
+        if corner[1]:
+
     return 0 # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
