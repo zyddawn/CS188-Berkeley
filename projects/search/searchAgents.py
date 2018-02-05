@@ -385,6 +385,7 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
+
     """
     # general strategy
     -> Base case: if we visited all the edges, h = 0
@@ -494,9 +495,21 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
-    position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+
+    """
+    # general strategy
+    -> Base case: if no food left, h = 0
+    -> determine the closest remaining food from the current position.
+    -> (food_x, food_y) - (current_x, current_y) will provide direction (Manhattan Distance).
+    -> take the maximum distance and use it as a heuristic (return 0 if we reached goal state)
+    """
+    current_position, foodGrid = state
+    distance = []
+
+    for foodPos in foodGrid.asList():
+        distance.append(util.manhattanDistance(foodPos, current_position))
+
+    return 0 if not distance else max(distance)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
