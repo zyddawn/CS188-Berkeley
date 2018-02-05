@@ -497,7 +497,7 @@ def foodHeuristic(state, problem):
     """
 
     """
-    # general strategy
+    # approach 1
     -> Base case: if no food left, h = 0
     -> determine the closest remaining food from the current position.
     -> (food_x, food_y) - (current_x, current_y) will provide direction (Manhattan Distance).
@@ -540,11 +540,7 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        # distance = []
-        # for foodPos in foodGrid.asList():
-        #     distance.append(util.manhattanDistance(foodPos, current_position))
-        #
-        # return 0 if not distance else max(distance)
+        return search.breadthFirstSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -580,7 +576,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y]
 
 def mazeDistance(point1, point2, gameState):
     """
