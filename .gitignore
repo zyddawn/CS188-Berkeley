@@ -1,0 +1,3 @@
+*.pyc
+projects/multiagent/venv/*
+*.idea
