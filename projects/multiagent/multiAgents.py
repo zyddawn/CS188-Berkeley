@@ -18,6 +18,7 @@ import random, util
 
 from game import Agent
 
+
 class ReflexAgent(Agent):
     """
       A reflex agent chooses an action at each choice point by examining
@@ -27,7 +28,6 @@ class ReflexAgent(Agent):
       it in any way you see fit, so long as you don't touch our method
       headers.
     """
-
 
     def getAction(self, gameState):
         """
@@ -45,7 +45,7 @@ class ReflexAgent(Agent):
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+        chosenIndex = random.choice(bestIndices)  # Pick randomly among the best
 
         "Add more of your code here if you want to"
 
@@ -74,7 +74,37 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
+        '''
+        -1 <= score <= 1
+        -1 -> take the opposite action
+        0  -> neutral
+        1  -> positive
+        
+        priority: super pellet > pellet
+        -> super pellet: +2 
+        -> closest pellet: +1
+        -> distance between pacman and ghost < 2: -1 (take risk)
+        -> distance between pacman and ghost < 1: -100 (zero tolerance)
+        -> N S E W will have individual score.
+        -> will move toward the highest scored direction. 
+        
+        if pacman take super pellet
+            -> priority: ghost > food (if ghost is closer)
+        '''
+        # closest_super_pellet = min([util.manhattanDistance()])
+        closest_pellet = min([util.manhattanDistance(newPos, food) for food in currentGameState.getCapsules()])
+        closest_ghost = min([util.manhattanDistance(newPos, ghost) for ghost in currentGameState.getGhostPositions()])
+
+        # if it's scared time, take the closest food regardless of ghost position
+        if newScaredTimes:
+            currentGameState.generateSuccessor
+
+        # general case
+        else:
+            currentGameState.generateSucc
+
         return successorGameState.getScore()
+
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -85,6 +115,7 @@ def scoreEvaluationFunction(currentGameState):
       (not reflex agents).
     """
     return currentGameState.getScore()
+
 
 class MultiAgentSearchAgent(Agent):
     """
@@ -101,10 +132,11 @@ class MultiAgentSearchAgent(Agent):
       is another abstract class.
     """
 
-    def __init__(self, evalFn = 'scoreEvaluationFunction', depth = '2'):
-        self.index = 0 # Pacman is always agent index 0
+    def __init__(self, evalFn='scoreEvaluationFunction', depth='2'):
+        self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -137,6 +169,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
+
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
       Your minimax agent with alpha-beta pruning (question 3)
@@ -148,6 +181,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -164,6 +198,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
+
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -174,6 +209,6 @@ def betterEvaluationFunction(currentGameState):
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
 
+
 # Abbreviation
 better = betterEvaluationFunction
-
