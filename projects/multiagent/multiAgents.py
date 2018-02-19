@@ -71,22 +71,30 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
+        new_ghost_position = [ghost.getPosition() for ghost in newGhostStates]
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        score = successorGameState.getScore()
 
         "*** YOUR CODE HERE ***"
-        # prevents ghost from sitting at one point and runaway from the ghost
-        if action == 'Stop' or newPos in successorGameState.getGhostPositions():
+        # prevents ghost from sitting at one point
+        if action == 'Stop':
             return -float('inf')
+
+        # determine if ghost around pacman is scared. if scared, don't runaway. if not, runaway.
+        for new_ghost_pos, ghost_scared_time in zip(new_ghost_position, newScaredTimes):
+            if newPos == new_ghost_pos:
+                if ghost_scared_time <= 0:
+                    return -float('inf')
 
         # saving the as the form of {(x, y): distance}
         super_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getCapsules()}
         normal_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getFood().asList()}
         ghosts = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getGhostPositions()}
-        score = successorGameState.getScore()
 
         # declaring default distance dictionary and score
         distance_dic = {'sp': 0, 'np': 0, 'gs': 0}
 
+        # custom setting for numerator as game result was heavily influenced by the numerator setting.
         if super_pellets:
             sp_xy = min(super_pellets, key=super_pellets.get)
             distance_dic['sp'] = float(5 / super_pellets[sp_xy])
@@ -99,21 +107,27 @@ class ReflexAgent(Agent):
             gs_xy = min(ghosts, key=ghosts.get)
             distance_dic['gs'] = float(1 / ghosts[gs_xy])
 
-        print('\
-*****************\n\
-foods: \n\
-{}\n\
-heuristic:\n\
-{}\n\
-*****************'.format(normal_pellets, distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + score))
-
-        print('remaining foods:\n{}'.format(len(successorGameState.getFood().asList())))
-        print('closest_super_pellet:\n{}'.format(distance_dic['sp']))
-        print('closest_pellet:\n{}'.format(distance_dic['np']))
-        # print('np_xy:\n{}'.format(np_xy))
-        print('score: {}'.format(currentGameState.getScore()))
+        # history tracking for verbose
+        track_history(successorGameState, distance_dic, normal_pellets, score)
 
         return distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + score
+
+
+def track_history(gs, ds, foods, score):
+    print('\
+**********************************\n\
+remaining foods:\n\
+{0}\n\
+closest_super_pellet:\n\
+{1}\n\
+closest_pellet:\n\
+{2}\n\
+foods: \n\
+{3}\n\
+heuristic:\n\
+{4}\n\
+**********************************\n\n'.format(len(gs.getFood().asList()), ds['sp'], ds['np'], foods,
+                                               ds['np'] + ds['sp'] + ds['gs'] + score))
 
 
 def scoreEvaluationFunction(currentGameState):
