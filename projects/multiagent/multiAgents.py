@@ -82,9 +82,8 @@ class ReflexAgent(Agent):
 
         # determine if ghost around pacman is scared. if scared, don't runaway. if not, runaway.
         for new_ghost_pos, ghost_scared_time in zip(new_ghost_position, newScaredTimes):
-            if newPos == new_ghost_pos:
-                if ghost_scared_time <= 0:
-                    return -float('inf')
+            if newPos == new_ghost_pos and ghost_scared_time <= 0:
+                return -float('inf')
 
         # saving the as the form of {(x, y): distance}
         super_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getCapsules()}
@@ -110,6 +109,7 @@ class ReflexAgent(Agent):
         # history tracking for verbose
         track_history(successorGameState, distance_dic, normal_pellets, score)
 
+        # high score = less food left = good heuristic
         return distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + score
 
 
@@ -191,13 +191,43 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maximizer(state, depth):
+            if state.isLose() or state.isWin() or self.depth == depth:
+                return 0, self.evaluationFunction(state)
 
-    def minimizer(self):
-        pass
+            max_dic = {}
+            for successor, ac in list((state.generateSuccessor(0, ac), ac) for ac in state.getLegalActions(0)):
+                max_dic[calc_minmax(successor, 1, depth)] = ac
 
-    def maximizer(self):
-        pass
+            max_value = max(max_dic)
+            max_action = max_dic[max_value]
+            return max_value, max_action
+
+        def minimizer(state, agent, depth):
+            if state.isLose() or state.isWin() or self.depth == depth:
+                return 0, self.evaluationFunction(state)
+
+            min_dic = {}
+            for successor, ac in list((state.generateSuccessor(agent, ac), ac) for ac in state.getLegalActions(agent)):
+                if agent == gameState.getNumAgents() - 1:
+                    min_dic[calc_minmax(successor, 0, depth + 1)] = ac
+                else:
+                    min_dic[calc_minmax(successor, agent + 1, depth)] = ac
+
+            min_value = min(min_dic)
+            min_action = min_dic[min_value]
+            return min_value, min_action
+
+        # starter
+        def calc_minmax(state, agent, depth):
+            # Case 1: Pacman (maximizer)
+            if agent == 0:
+                return maximizer(state, depth)
+
+            # Case 2: Ghost (minimizer)
+            return minimizer(state, agent, depth)
+
+        return calc_minmax(gameState, 0, 0)[1]
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
