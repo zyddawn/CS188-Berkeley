@@ -74,36 +74,46 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        '''
-        -1 <= score <= 1
-        -1 -> take the opposite action
-        0  -> neutral
-        1  -> positive
-        
-        priority: super pellet > pellet
-        -> super pellet: +2 
-        -> closest pellet: +1
-        -> distance between pacman and ghost < 2: -1 (take risk)
-        -> distance between pacman and ghost < 1: -100 (zero tolerance)
-        -> N S E W will have individual score.
-        -> will move toward the highest scored direction. 
-        
-        if pacman take super pellet
-            -> priority: ghost > food (if ghost is closer)
-        '''
-        # closest_super_pellet = min([util.manhattanDistance()])
-        closest_pellet = min([util.manhattanDistance(newPos, food) for food in currentGameState.getCapsules()])
-        closest_ghost = min([util.manhattanDistance(newPos, ghost) for ghost in currentGameState.getGhostPositions()])
+        # prevents ghost from sitting at one point and runaway from the ghost
+        if action == 'Stop' or newPos in successorGameState.getGhostPositions():
+            return -float('inf')
 
-        # if it's scared time, take the closest food regardless of ghost position
-        if newScaredTimes:
-            currentGameState.generateSuccessor
+        # saving the as the form of {(x, y): distance}
+        super_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getCapsules()}
+        normal_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getFood().asList()}
+        ghosts = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getGhostPositions()}
+        score = successorGameState.getScore()
 
-        # general case
-        else:
-            currentGameState.generateSucc
+        # declaring default distance dictionary and score
+        distance_dic = {'sp': 0, 'np': 0, 'gs': 0}
 
-        return successorGameState.getScore()
+        if super_pellets:
+            sp_xy = min(super_pellets, key=super_pellets.get)
+            distance_dic['sp'] = float(5 / super_pellets[sp_xy])
+
+        if normal_pellets:
+            np_xy = min(normal_pellets, key=normal_pellets.get)
+            distance_dic['np'] = float(15 / normal_pellets[np_xy])
+
+        if ghosts:
+            gs_xy = min(ghosts, key=ghosts.get)
+            distance_dic['gs'] = float(1 / ghosts[gs_xy])
+
+        print('\
+*****************\n\
+foods: \n\
+{}\n\
+heuristic:\n\
+{}\n\
+*****************'.format(normal_pellets, distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + score))
+
+        print('remaining foods:\n{}'.format(len(successorGameState.getFood().asList())))
+        print('closest_super_pellet:\n{}'.format(distance_dic['sp']))
+        print('closest_pellet:\n{}'.format(distance_dic['np']))
+        # print('np_xy:\n{}'.format(np_xy))
+        print('score: {}'.format(currentGameState.getScore()))
+
+        return distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + score
 
 
 def scoreEvaluationFunction(currentGameState):
@@ -168,6 +178,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+
+    def minimizer(self):
+        pass
+
+    def maximizer(self):
+        pass
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
