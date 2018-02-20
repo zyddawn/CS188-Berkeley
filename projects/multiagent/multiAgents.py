@@ -309,46 +309,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
+        def maximizer(state, depth):
+            if state.isLose() or state.isWin() or self.depth == depth:
+                return self.evaluationFunction(state), None
 
-        # def maximizer(state, depth):
-        #     if state.isLose() or state.isWin() or self.depth == depth:
-        #         return self.evaluationFunction(state), None
-        #
-        #     max_dic = {}
-        #     for ac in state.getLegalActions(0):
-        #         max_dic[calc_minmax(state.generateSuccessor(0, ac), 1, depth)[0]] = ac
-        #         max_value = max(max_dic)
-        #         max_action = max_dic[max_value]
-        #
-        #     return max_value, max_action
-        #
-        # def minimizer(state, agent, depth):
-        #     if state.isLose() or state.isWin() or self.depth == depth:
-        #         return self.evaluationFunction(state), None
-        #
-        #     min_dic = {}
-        #     for ac in state.getLegalActions(agent):
-        #         if agent == gameState.getNumAgents() - 1:
-        #             min_value_action = calc_minmax(state.generateSuccessor(agent, ac), 0, depth + 1)
-        #         else:
-        #             min_value_action = calc_minmax(state.generateSuccessor(agent, ac), agent + 1, depth)
-        #
-        #         min_dic[min_value_action[0]] = ac
-        #         min_value = min(min_dic)
-        #         min_action = min_dic[min_value]
-        #
-        #     return float(min_value) / len(state.getLegalActions()), min_action
-        #
-        # # starter
-        # def calc_minmax(state, agent, depth):
-        #     # Case 1: Pacman (maximizer)
-        #     if agent == 0:
-        #         return maximizer(state, depth)
-        #
-        #     # Case 2: Ghost (minimizer)
-        #     return minimizer(state, agent, depth)
-        #
-        # return calc_minmax(gameState, 0, 0)[1]
+            max_dic = {}
+            for ac in state.getLegalActions(0):
+                max_dic[calc_minmax(state.generateSuccessor(0, ac), 1, depth)[0]] = ac
+                max_value = max(max_dic)
+                max_action = max_dic[max_value]
+
+            return max_value, max_action
+
+        def minimizer(state, agent, depth):
+            if state.isLose() or state.isWin() or self.depth == depth:
+                return self.evaluationFunction(state), None
+
+            min_dic = {}
+            for ac in state.getLegalActions(agent):
+                if agent == gameState.getNumAgents() - 1:
+                    min_value_action = calc_minmax(state.generateSuccessor(agent, ac), 0, depth + 1)
+                else:
+                    min_value_action = calc_minmax(state.generateSuccessor(agent, ac), agent + 1, depth)
+
+                min_dic[min_value_action[0]] = ac
+                min_value = min(min_dic)
+                min_action = min_dic[min_value]
+
+            return float(min_value) / len(state.getLegalActions()), min_action
+
+        # starter
+        def calc_minmax(state, agent, depth):
+            # Case 1: Pacman (maximizer)
+            if agent == 0:
+                return maximizer(state, depth)
+
+            # Case 2: Ghost (minimizer)
+            return minimizer(state, agent, depth)
+
+        return calc_minmax(gameState, 0, 0)[1]
 
 
 
