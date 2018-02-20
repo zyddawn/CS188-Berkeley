@@ -80,13 +80,14 @@ class ReflexAgent(Agent):
         if action == 'Stop':
             return -float('inf')
 
+        scared_flag = False
         # determine if ghost around pacman is scared. if scared, don't runaway. if not, runaway.
         for new_ghost_pos, ghost_scared_time in zip(new_ghost_position, newScaredTimes):
             if newPos == new_ghost_pos:
                 if ghost_scared_time <= 0:
                     return -float('inf')
                 else:
-                    pass
+                    scared_flag = True
 
         # saving the as the form of {(x, y): distance}
         super_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in successorGameState.getCapsules()}
@@ -107,13 +108,16 @@ class ReflexAgent(Agent):
 
         if ghosts:
             gs_xy = min(ghosts, key=ghosts.get)
-            distance_dic['gs'] = float(1 / ghosts[gs_xy])
+            if scared_flag:
+                distance_dic['gs'] = float(5 / ghosts[gs_xy])
+            else:
+                distance_dic['gs'] = float(1 / ghosts[gs_xy])
 
         # history tracking for verbose
         track_history(successorGameState, distance_dic, normal_pellets, score)
 
         # high score = less food left = good heuristic
-        return distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + score
+        return distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + 1.5 * score
 
 
 def track_history(gs, ds, foods, score):
@@ -194,6 +198,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+
         def maximizer(state, depth):
             if state.isLose() or state.isWin() or self.depth == depth:
                 return self.evaluationFunction(state), None
@@ -304,7 +309,47 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def max_estimator(state, depth):
+            if state.isLose() or state.isWin() or self.depth == depth:
+                return self.evaluationFunction(state), None
+
+            max_dic = {}
+            for ac in state.getLegalActions(0):
+                max_dic[calc_expectimax(state.generateSuccessor(0, ac), 1, depth)[0]] = ac
+                max_value = max(max_dic)
+                max_action = max_dic[max_value]
+
+            return max_value, max_action
+
+        def exp_estimator(state, agent, depth):
+            if state.isLose() or state.isWin() or self.depth == depth:
+                return self.evaluationFunction(state), None
+
+            min_dic = {}
+            total, p = 0, float(1 / len(state.getLegalActions(agent)))
+            for ac in state.getLegalActions(agent):
+                if agent == gameState.getNumAgents() - 1:
+                    value_action = calc_expectimax(state.generateSuccessor(agent, ac), 0, depth + 1)
+                else:
+                    value_action = calc_expectimax(state.generateSuccessor(agent, ac), agent + 1, depth)
+
+                min_dic[value_action[0]] = ac
+                min_value = min(min_dic)
+                min_action = min_dic[min_value]
+
+            return float(sum(min_dic) / len(state.getLegalActions(agent))), min_action
+
+        # starter
+        def calc_expectimax(state, agent, depth):
+            # Case 1: Pacman (maximizer)
+            if agent == 0:
+                return max_estimator(state, depth)
+
+            # Case 2: Ghost (minimizer)
+            return exp_estimator(state, agent, depth)
+
+        return calc_expectimax(gameState, 0, 0)[1]
 
 
 def betterEvaluationFunction(currentGameState):
@@ -312,10 +357,77 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION:
+      I considered following factors for the evaluation function:
+
+      - closest normal pellet from Pacman
+      - closest super pellet from Pacman
+      - cloeset ghost from Pacman
+      - current score
+
+      1) cloeset normal pellet from Pacman
+      When I choose the pellet, I always chose the closest one as it's going to take the shortest path.
+      This means that Pacman does not need to waste our score as well as steps.
+
+      2) closest super pellet from Pacman
+      Same reason as above
+
+      3) cloeset ghost from Pacman
+      It may look weird that I assigned higher score as ghost gets closer to Pacman.
+      However, this is okay as I pre-filtered the situation that Pacman may be killed.
+      Also, as calculated the scared time of ghost, Pacnman sometimes can hunt ghost around.
+      Specificailly, Pacman avoids ghost only if next move of Pacman may kill him.
+
+      4) Current Score
+      As Pacman eats the pellets, our score goes up, which is the good sign.
+      I could have assigned the number of pellets, but using score was more intuitive for me.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # useful information
+    newPos = currentGameState.getPacmanPosition()
+    newGhostStates = currentGameState.getGhostStates()
+    new_ghost_position = [ghost.getPosition() for ghost in newGhostStates]
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    score = currentGameState.getScore()
+
+    # determine if ghost around pacman is scared. if scared, don't runaway. if not, runaway.
+    scared_flag = False
+    for new_ghost_pos, ghost_scared_time in zip(new_ghost_position, newScaredTimes):
+        if newPos == new_ghost_pos:
+            if ghost_scared_time <= 0:
+                return -float('inf')
+            else:
+                scared_flag = True
+
+    # saving the as the form of {(x, y): distance}
+    super_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in currentGameState.getCapsules()}
+    normal_pellets = {loc: util.manhattanDistance(newPos, loc) for loc in currentGameState.getFood().asList()}
+    ghosts = {loc: util.manhattanDistance(newPos, loc) for loc in currentGameState.getGhostPositions()}
+
+    # declaring default distance dictionary and score
+    distance_dic = {'sp': 0, 'np': 0, 'gs': 0}
+
+    # custom setting for numerator as game result was heavily influenced by the numerator setting.
+    if super_pellets:
+        sp_xy = min(super_pellets, key=super_pellets.get)
+        distance_dic['sp'] = float(5 / super_pellets[sp_xy])
+
+    if normal_pellets:
+        np_xy = min(normal_pellets, key=normal_pellets.get)
+        distance_dic['np'] = float(15 / normal_pellets[np_xy])
+
+    if ghosts:
+        gs_xy = min(ghosts, key=ghosts.get)
+        if scared_flag:
+            distance_dic['gs'] = float(10 / ghosts[gs_xy])
+        else:
+            distance_dic['gs'] = float(1 / ghosts[gs_xy])
+
+    # history tracking for verbose
+    # track_history(currentGameState, distance_dic, normal_pellets, score)
+
+    # high score = less food left = good heuristic
+    return distance_dic['np'] + distance_dic['sp'] + distance_dic['gs'] + 1.5 * score
 
 
 # Abbreviation
