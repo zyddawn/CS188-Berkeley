@@ -81,7 +81,7 @@ Offline Planning (MDP)가 아니다! Since we takes actions in the world.
 
 2. 즉 이런 상호 작용의 문제를 해결하기 위해 나온것이 TD Learning (Temporal Difference Learning) 임. TDL의 경우 기본적으로 Bellman's Equation을 이용해서 value iteration을 하는 방법. 문제가 있다면 policy를 바꿀 수가 없음. (애초부터 fixed policy를 전제로 시작했기에...)
 
-3. 이러한 문제를 보완 하기 위해 우리는 Q-Learning 을 적용. Q-Learning의 경우 메인이 value iteration이 아닌 policy iteration임.
+3. 이러한 문제를 보완 하기 위해 우리는 Q-Learning 을 적용. Q-Learning의 경우 메인이 value iteration이 아닌 policy iteration임. (Fixed Policy는 Value Iteration을 하면서 나오는 값을 얻기 위함이고 마지막에 나오는 Optimal Policy 와는 관련이 없다.)
 
 (어찌 됬건 $T, R$ 값이 없기 때문에 depth-limited value iteration을 통해 $V$값을 얻어내고 그 이후 Q값을 계산.)
 
