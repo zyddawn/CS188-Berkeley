@@ -146,6 +146,13 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()
+        for i in range(self.iterations):
+            s = states[i % len(states)]
+            if not self.mdp.isTerminal(s):
+                act = self.computeActionFromValues(s)
+                if act:
+                    self.values[s] = self.computeQValueFromValues(s, act)
 
 
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
@@ -168,3 +175,52 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        # predecessors counter for checking duplicates
+        predecessors = util.Counter()
+
+        # priority queue
+        pq = util.PriorityQueue()
+
+        # all possible states
+        states = self.mdp.getStates()
+
+        # helper function to get Q value
+        def getNewValue(s):
+            return self.computeQValueFromValues(s, self.computeActionFromValues(s))
+
+        # compute predecessors of all states
+        for s in states:
+            # get all possible actions from s
+            actions = self.mdp.getPossibleActions(s)
+
+            # set Q-value
+            for a in actions:
+                # get all the possible states after taking action a
+                states_and_prob = self.mdp.getTransitionStatesAndProbs(s, a)
+
+                # check if new state is in predecessors
+                for ns, _ in states_and_prob:
+                    if ns not in predecessors:
+                        predecessors[ns] = set()
+                    predecessors[ns].add(s)
+
+        # push -abs(V(s) - max(Q(s', a')))
+        for s in states:
+            if not self.mdp.isTerminal(s):
+                diff = abs(getNewValue(s) - self.values[s])
+                pq.push(s, -diff)
+
+        # update
+        for i in range(self.iterations):
+            # trivial case
+            if pq.isEmpty():
+                break
+
+            # non-trivial cases
+            s = pq.pop()
+            self.values[s] = getNewValue(s)
+            for p in predecessors[s]:
+                new_value = getNewValue(p)
+                diff = abs(new_value - self.values[p])
+                if diff > self.theta:
+                    pq.update(p, -diff)
