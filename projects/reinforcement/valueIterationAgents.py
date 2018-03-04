@@ -66,7 +66,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         for _ in range(self.iterations):
             new_values = self.values.copy()
             for s in self.mdp.getStates():
-                if self.getAction(s) is not None:
+                if not self.getAction(s):
                     new_values[s] = max([self.computeQValueFromValues(s, a) for a in self.mdp.getPossibleActions(s)])
             self.values = new_values
 
