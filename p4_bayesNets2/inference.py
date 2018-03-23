@@ -108,7 +108,7 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
                           variables which are presented as evidence
                           (conditioned) in the inference query. 
         eliminationOrder: The order to eliminate the variables in.
-
+        
         Hint: BayesNet.getAllCPTsWithEvidence will return all the Conditional 
         Probability Tables even if an empty dict (or None) is passed in for 
         evidenceDict. In this case it will not specialize any variable domains 
@@ -131,9 +131,23 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
             eliminationOrder = sorted(list(eliminationVariables))
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-
+        all_factors = bayesNet.getAllCPTsWithEvidence()
+        
+        for var in evidenceDict:
+            currentFactorsNotToJoin, joinedFactor = joinFactorsByVariable(all_factors, var)
+        #print(queryVariables)
+        #print(evidenceDict)
+        #print(eliminationOrder)
+        #print("Original Joined: ", joinedFactor)
+        for F in eliminationOrder:
+            joinedFactor = eliminate(joinedFactor, F)
+            #print("Joined: ", joinedFactor)
+        #print("Final Joined: ", joinedFactor)
+        domain_dict = joinedFactor.variableDomainsDict()
+        for k,v in evidenceDict.items():
+            domain_dict[k] = [v]
+        new_factor = normalize(joinedFactor.specializeVariableDomains(domain_dict))
+        return new_factor
     return inferenceByVariableElimination
 
 inferenceByVariableElimination = inferenceByVariableEliminationWithCallTracking()
