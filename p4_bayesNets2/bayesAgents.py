@@ -95,7 +95,7 @@ def constructBayesNet(gameState):
     edges = []
     variableDomainsDict = {}
 
-    "*** YOUR CODE HERE ***"
+    #"*** YOUR CODE HERE ***"
     # add obsVar
     for housePos in gameState.getPossibleHouses():
         for obsPos in gameState.getHouseWalls(housePos):
@@ -140,7 +140,7 @@ def fillYCPT(bayesNet, gameState):
     probabilities down by hand.
     """
     yFactor = bn.Factor([Y_POS_VAR], [], bayesNet.variableDomainsDict())
-    "*** YOUR CODE HERE ***"
+    #"*** YOUR CODE HERE ***"
     yFactor.setProbability({Y_POS_VAR: BOTH_TOP_VAL}, PROB_BOTH_TOP)
     yFactor.setProbability({Y_POS_VAR: BOTH_BOTTOM_VAL}, PROB_BOTH_BOTTOM)
     yFactor.setProbability({Y_POS_VAR: LEFT_TOP_VAL}, PROB_ONLY_LEFT_TOP)
@@ -209,9 +209,7 @@ def fillObsCPT(bayesNet, gameState):
     """
     
     bottomLeftPos, topLeftPos, bottomRightPos, topRightPos = gameState.getPossibleHouses()
-    "*** YOUR CODE HERE ***"
-    #print(PROB_GHOST_RED, PROB_FOOD_RED)
-    #print("OBS:", bottomLeftPos, topLeftPos, bottomRightPos, topRightPos)
+    #"*** YOUR CODE HERE ***"
     def l2_distance(p1, p2):
         import numpy as np
         return np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)

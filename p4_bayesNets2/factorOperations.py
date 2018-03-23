@@ -70,7 +70,7 @@ def joinFactors(factors):
 
     You may assume that the variableDomainsDict for all the input 
     factors are the same, since they come from the same BayesNet.
-
+    
     joinFactors will only allow unconditionedVariables to appear in 
     one input factor (so their join is well defined).
 
@@ -98,10 +98,22 @@ def joinFactors(factors):
                     "\nappear in more than one input factor.\n" + 
                     "Input factors: \n" +
                     "\n".join(map(str, factors)))
-
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #"*** YOUR CODE HERE ***"
+    base_factor = factors[0]
+    for factor in factors[1:]:
+        base_uncond = base_factor.unconditionedVariables()
+        base_cond = base_factor.conditionedVariables()
+        f_uncond = factor.unconditionedVariables()
+        f_cond = factor.conditionedVariables()
+        new_uncond = list(base_uncond.union(f_uncond))
+        new_cond = list(base_cond.union(f_cond).difference(new_uncond))
+        # everytime combine two factors, create a new factor
+        new_factor = Factor(new_uncond, new_cond, factor.variableDomainsDict()) 
+        for assignment in new_factor.getAllPossibleAssignmentDicts():
+            prob = base_factor.getProbability(assignment) * factor.getProbability(assignment)
+            new_factor.setProbability(assignment, prob)
+        base_factor = new_factor
+    return base_factor
 
 
 def eliminateWithCallTracking(callTrackingList=None):
