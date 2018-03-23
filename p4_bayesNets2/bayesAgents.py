@@ -139,11 +139,14 @@ def fillYCPT(bayesNet, gameState):
     You can use the PROB_* constants imported from layout rather than writing
     probabilities down by hand.
     """
-
     yFactor = bn.Factor([Y_POS_VAR], [], bayesNet.variableDomainsDict())
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    yFactor.setProbability({Y_POS_VAR: BOTH_TOP_VAL}, PROB_BOTH_TOP)
+    yFactor.setProbability({Y_POS_VAR: BOTH_BOTTOM_VAL}, PROB_BOTH_BOTTOM)
+    yFactor.setProbability({Y_POS_VAR: LEFT_TOP_VAL}, PROB_ONLY_LEFT_TOP)
+    yFactor.setProbability({Y_POS_VAR: LEFT_BOTTOM_VAL}, PROB_ONLY_LEFT_BOTTOM)
     bayesNet.setCPT(Y_POS_VAR, yFactor)
+
 
 def fillHouseCPT(bayesNet, gameState):
     foodHouseFactor = bn.Factor([FOOD_HOUSE_VAR], [X_POS_VAR, Y_POS_VAR], bayesNet.variableDomainsDict())
@@ -180,6 +183,7 @@ def fillHouseCPT(bayesNet, gameState):
         ghostHouseFactor.setProbability(assignment, prob)
     bayesNet.setCPT(GHOST_HOUSE_VAR, ghostHouseFactor)
 
+
 def fillObsCPT(bayesNet, gameState):
     """
     Question 2b: Bayes net probabilities
@@ -203,11 +207,53 @@ def fillObsCPT(bayesNet, gameState):
     autograder, use the *food house distribution* over colors when both the food
     house and ghost house are assigned to the same cell.
     """
-
+    
     bottomLeftPos, topLeftPos, bottomRightPos, topRightPos = gameState.getPossibleHouses()
-
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #print(PROB_GHOST_RED, PROB_FOOD_RED)
+    #print("OBS:", bottomLeftPos, topLeftPos, bottomRightPos, topRightPos)
+    def l2_distance(p1, p2):
+        import numpy as np
+        return np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+
+    HOUSE_VALS = [TOP_LEFT_VAL, TOP_RIGHT_VAL, BOTTOM_LEFT_VAL, BOTTOM_RIGHT_VAL]
+    all_house = [topLeftPos, topRightPos, bottomLeftPos, bottomRightPos]
+    House_dict = {k:v for k, v in zip(HOUSE_VALS, all_house)}
+    obsVars = []
+    obsPos_dict = {}
+    for housePos in all_house:
+        for obsPos in gameState.getHouseWalls(housePos):
+            obsVar = OBS_VAR_TEMPLATE % obsPos
+            obsVars.append(obsVar)                  # save pos name
+            obsPos_dict[obsVar] = obsPos            # save pos coordinate
+
+    for obsVar in obsVars:
+        obsFactor = bn.Factor([obsVar], [FOOD_HOUSE_VAR, GHOST_HOUSE_VAR], bayesNet.variableDomainsDict())
+        adj_center = min(House_dict.items(), key=lambda hp: l2_distance(hp[1], obsPos_dict[obsVar]))[0]     # find adjacent center with l2 distance
+        for assignment in obsFactor.getAllPossibleAssignmentDicts():
+            if adj_center == assignment[FOOD_HOUSE_VAR]:
+                if assignment[obsVar] == RED_OBS_VAL:
+                    prob = PROB_FOOD_RED
+                elif assignment[obsVar] == BLUE_OBS_VAL:
+                    prob = 1 - PROB_FOOD_RED
+                else:
+                    prob = 0
+            elif adj_center == assignment[GHOST_HOUSE_VAR]:
+                if assignment[obsVar] == RED_OBS_VAL:
+                    prob = PROB_GHOST_RED
+                elif assignment[obsVar] == BLUE_OBS_VAL:
+                    prob = 1 - PROB_GHOST_RED
+                else:
+                    prob = 0
+            else:
+                if assignment[obsVar] == NO_OBS_VAL:
+                    prob = 1
+                else:
+                    prob = 0
+            obsFactor.setProbability(assignment, prob)
+        bayesNet.setCPT(obsVar, obsFactor)
+
+
 
 def getMostLikelyFoodHousePosition(evidence, bayesNet, eliminationOrder):
     """
