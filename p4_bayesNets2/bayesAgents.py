@@ -265,14 +265,14 @@ def getMostLikelyFoodHousePosition(evidence, bayesNet, eliminationOrder):
 
     (This should be a very short method.)
     """
-    "*** YOUR CODE HERE ***"
+    #"*** YOUR CODE HERE ***"
     queryVariables = [FOOD_HOUSE_VAR]
-    new_factor = inference.inferenceByVariableElimination(bayesNet, queryVariables, evidence, eliminationOrder)
-    all_assignments = new_factor.getAllPossibleAssignmentDicts()
+    food_factor = inference.inferenceByVariableElimination(bayesNet, queryVariables, evidence, eliminationOrder)
+    all_assignments = food_factor.getAllPossibleAssignmentDicts()
     best_pos = None
     best_prob = 0.0
     for assignment in all_assignments:
-        cur_prob = new_factor.getProbability(assignment)
+        cur_prob = food_factor.getProbability(assignment)
         if cur_prob > best_prob:
             best_pos = assignment[FOOD_HOUSE_VAR]
             best_prob = cur_prob
@@ -379,8 +379,19 @@ class VPIAgent(BayesAgent):
         leftExpectedValue = 0
         rightExpectedValue = 0
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #"*** YOUR CODE HERE ***"
+        FoodGhostFactor = inference.inferenceByVariableElimination(self.bayesNet, HOUSE_VARS, evidence, eliminationOrder)
+        base_assignment = FoodGhostFactor.getAllPossibleAssignmentDicts()[0]
+        flgr_assignment = {k:v for k,v in base_assignment.items()}
+        flgr_assignment[FOOD_HOUSE_VAR] = "topLeft"; flgr_assignment[GHOST_HOUSE_VAR] = "topRight"; 
+        flgr_prob = FoodGhostFactor.getProbability(flgr_assignment)
+
+        frgl_assignment = {k:v for k,v in base_assignment.items()}
+        frgl_assignment[FOOD_HOUSE_VAR] = "topRight"; frgl_assignment[GHOST_HOUSE_VAR] = "topLeft"; 
+        frgl_prob = FoodGhostFactor.getProbability(frgl_assignment)
+
+        leftExpectedValue = flgr_prob*WON_GAME_REWARD + frgl_prob*GHOST_COLLISION_REWARD
+        rightExpectedValue = frgl_prob*WON_GAME_REWARD + flgr_prob*GHOST_COLLISION_REWARD
 
         return leftExpectedValue, rightExpectedValue
 
@@ -445,8 +456,12 @@ class VPIAgent(BayesAgent):
 
         expectedValue = 0
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #"*** YOUR CODE HERE ***"
+        
+
+
+        
+        
 
         return expectedValue
 
