@@ -1,4 +1,4 @@
-# inference.py
+ # inference.py
 # ------------
 # Licensing Information:  You are free to use or extend these projects for
 # educational purposes provided that (1) you do not distribute or publish
@@ -131,24 +131,16 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
             eliminationOrder = sorted(list(eliminationVariables))
 
         "*** YOUR CODE HERE ***"
-        all_factors = bayesNet.getAllCPTsWithEvidence()
-        
-        for var in evidenceDict:
-            currentFactorsNotToJoin, joinedFactor = joinFactorsByVariable(all_factors, var)
-        #print(queryVariables)
-        #print(evidenceDict)
-        #print(eliminationOrder)
-        #print("Original Joined: ", joinedFactor)
-        for F in eliminationOrder:
-            joinedFactor = eliminate(joinedFactor, F)
-            #print("Joined: ", joinedFactor)
-        #print("Final Joined: ", joinedFactor)
-        domain_dict = joinedFactor.variableDomainsDict()
-        for k,v in evidenceDict.items():
-            domain_dict[k] = [v]
-        new_factor = normalize(joinedFactor.specializeVariableDomains(domain_dict))
+        all_factors = bayesNet.getAllCPTsWithEvidence(evidenceDict)
+        for var in eliminationOrder:
+            all_factors, joinedFactor = joinFactorsByVariable(all_factors, var)
+            if len(joinedFactor.unconditionedVariables()) > 1:
+                elim_factor = eliminate(joinedFactor, var)
+                all_factors.append(elim_factor)
+        new_factor = normalize(joinFactors(all_factors))
         return new_factor
     return inferenceByVariableElimination
+
 
 inferenceByVariableElimination = inferenceByVariableEliminationWithCallTracking()
 
