@@ -382,6 +382,7 @@ class VPIAgent(BayesAgent):
         #"*** YOUR CODE HERE ***"
         FoodGhostFactor = inference.inferenceByVariableElimination(self.bayesNet, HOUSE_VARS, evidence, eliminationOrder)
         base_assignment = FoodGhostFactor.getAllPossibleAssignmentDicts()[0]
+        
         flgr_assignment = {k:v for k,v in base_assignment.items()}
         flgr_assignment[FOOD_HOUSE_VAR] = "topLeft"; flgr_assignment[GHOST_HOUSE_VAR] = "topRight"; 
         flgr_prob = FoodGhostFactor.getProbability(flgr_assignment)
@@ -394,6 +395,7 @@ class VPIAgent(BayesAgent):
         rightExpectedValue = frgl_prob*WON_GAME_REWARD + flgr_prob*GHOST_COLLISION_REWARD
 
         return leftExpectedValue, rightExpectedValue
+
 
     def getExplorationProbsAndOutcomes(self, evidence):
         unknownVars = [o for o in self.obsVars if o not in evidence]
@@ -455,15 +457,13 @@ class VPIAgent(BayesAgent):
         """
 
         expectedValue = 0
-
         #"*** YOUR CODE HERE ***"
-        
-
-
-        
-        
-
+        Prob_assignments = self.getExplorationProbsAndOutcomes(evidence)
+        for prob, new_evidence in Prob_assignments:
+            utility = max(self.computeEnterValues(new_evidence, enterEliminationOrder))
+            expectedValue += prob * utility
         return expectedValue
+
 
     def getAction(self, gameState):
 
