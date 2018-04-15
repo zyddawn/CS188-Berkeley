@@ -298,14 +298,10 @@ class ExactInference(InferenceModule):
         pacmanPosition = gameState.getPacmanPosition()
         jailPosition = self.getJailPosition()
         temp_beliefs = self.beliefs.copy()
-        for cur_ghost in self.allPositions:
-            prob = 0
-            for old_ghost in self.allPositions:
-                old_distribution = self.getPositionDistribution(gameState, old_ghost).copy()
-                old_distribution.normalize()
-
-                prob += old_distribution[cur_ghost] * self.getObservationProb(observation, pacmanPosition, old_ghost, jailPosition)
-            temp_beliefs[cur_ghost] = prob
+        for ghostPosition in self.allPositions:
+            cur_prob = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
+            old_prob = self.beliefs[ghostPosition]
+            temp_beliefs[ghostPosition] = cur_prob * old_prob      # GHOST DOESN'T MOVE
         self.beliefs = temp_beliefs
         self.beliefs.normalize()
 
@@ -319,7 +315,17 @@ class ExactInference(InferenceModule):
         Pacman's current position. However, this is not a problem, as Pacman's
         current position is known.
         """
-        "*** YOUR CODE HERE ***"
+        #"*** YOUR CODE HERE ***"
+        pacmanPosition = gameState.getPacmanPosition()
+        jailPosition = self.getJailPosition()
+        temp_beliefs = DiscreteDistribution()
+        for oldPos in self.allPositions:
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            for newPos in self.allPositions:
+                temp_beliefs[newPos] += newPosDist[newPos] * self.beliefs[oldPos]
+        self.beliefs = temp_beliefs
+        self.beliefs.normalize()
+
 
     def getBeliefDistribution(self):
         return self.beliefs
