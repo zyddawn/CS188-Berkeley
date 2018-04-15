@@ -11,11 +11,12 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
-
+from __future__ import division
 import itertools
 import random
 import busters
 import game
+import numpy as np
 
 from util import manhattanDistance
 
@@ -74,7 +75,12 @@ class DiscreteDistribution(dict):
         >>> empty
         {}
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        sumn = self.total()
+        if sumn > 0:
+            for key in self:
+                self[key] /= sumn
+
 
     def sample(self):
         """
@@ -97,7 +103,12 @@ class DiscreteDistribution(dict):
         >>> round(samples.count('d') * 1.0/N, 1)
         0.0
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        copy_self = self.copy()
+        self.normalize()
+        res = np.random.choice(self.keys(), 1, p=self.values())
+        self = copy_self
+        return res
 
 
 class InferenceModule:
@@ -166,7 +177,17 @@ class InferenceModule:
         """
         Return the probability P(noisyDistance | pacmanPosition, ghostPosition).
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        if jailPosition == ghostPosition:
+            if noisyDistance is None:
+                return 1
+            return 0
+        elif noisyDistance is None:
+            return 0
+        trueDistance = manhattanDistance(pacmanPosition, ghostPosition)
+        prob = busters.getObservationProbability(noisyDistance, trueDistance)
+        return prob
+
 
     def setGhostPosition(self, gameState, ghostPosition, index):
         """
@@ -273,8 +294,21 @@ class ExactInference(InferenceModule):
         current position. However, this is not a problem, as Pacman's current
         position is known.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        pacmanPosition = gameState.getPacmanPosition()
+        jailPosition = self.getJailPosition()
+        temp_beliefs = self.beliefs.copy()
+        for cur_ghost in self.allPositions:
+            prob = 0
+            for old_ghost in self.allPositions:
+                old_distribution = self.getPositionDistribution(gameState, old_ghost).copy()
+                old_distribution.normalize()
+
+                prob += old_distribution[cur_ghost] * self.getObservationProb(observation, pacmanPosition, old_ghost, jailPosition)
+            temp_beliefs[cur_ghost] = prob
+        self.beliefs = temp_beliefs
         self.beliefs.normalize()
+
 
     def elapseTime(self, gameState):
         """
