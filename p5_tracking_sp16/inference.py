@@ -356,14 +356,12 @@ class ParticleFilter(InferenceModule):
         # "*** YOUR CODE HERE ***"
         self.beliefs = DiscreteDistribution()
         num_pos = len(self.legalPositions)
-        for i in range(num_pos):
-            self.particles.append(0)
+
         for i in range(self.numParticles):
-            self.particles[i%num_pos] += 1
-        for i, p in enumerate(self.legalPositions):
-            self.beliefs[p] = self.particles[i] / self.numParticles
+            self.particles.append(self.legalPositions[i%num_pos])
+        for pos in self.legalPositions:
+            self.beliefs[pos] = self.particles.count(pos) / self.numParticles
         self.beliefs.normalize()
-        #assert sum(self.particles) == self.numParticles
         
 
     def observeUpdate(self, observation, gameState):
@@ -391,10 +389,9 @@ class ParticleFilter(InferenceModule):
 
         if self.beliefs.total() == 0:       # if total weight is zero, updated self.beliefs should also be zero
             self.initializeUniformly(gameState)
-        
-        samples = [self.beliefs.sample() for _ in range(self.numParticles)]
-        for i in range(len(self.legalPositions)):
-            self.particles[i] = samples.count(self.legalPositions[i])
+        else:
+            self.particles = [self.beliefs.sample() for _ in range(self.numParticles)]
+
 
 
     def elapseTime(self, gameState):
@@ -404,15 +401,14 @@ class ParticleFilter(InferenceModule):
         """
         # "*** YOUR CODE HERE ***"
         particle_samples = []
-        for i, oldPos in enumerate(self.legalPositions):
-            newPosDist = self.getPositionDistribution(gameState, oldPos)
-            particle_num = self.particles[i]
-            for _ in range(particle_num):
-                new_sample = newPosDist.sample()
-                particle_samples.append(new_sample)
-        for i, Pos in enumerate(self.legalPositions):
-            self.particles[i] = particle_samples.count(Pos)
-            self.beliefs[Pos] = self.particles[i] / self.numParticles
+        for i, oldParticle in enumerate(self.particles):
+            newPosDist = self.getPositionDistribution(gameState, oldParticle    )
+            particle_samples.append(newPosDist.sample())
+
+        self.particles = particle_samples
+        for i, pos in enumerate(self.legalPositions):
+            self.beliefs[pos] = self.particles.count(pos) / self.numParticles
+        self.beliefs.normalize()
 
 
     def getBeliefDistribution(self):
@@ -456,16 +452,9 @@ class JointParticleFilter(ParticleFilter):
         random.shuffle(self.combine_multi_pos)
         
         num_pos = len(self.combine_multi_pos)
-        '''
-        for i in range(num_pos):
-            self.particles.append(0)
-        for i in range(self.numParticles):
-            self.particles[i%num_pos] += 1
-        '''
         for i in range(self.numParticles):
             self.particles.append(self.combine_multi_pos[i%num_pos])
         for i, pos in enumerate(self.combine_multi_pos):
-            # self.beliefs[p] = self.particles[i] / self.numParticles
             self.beliefs[pos] = self.particles.count(pos) / self.numParticles
         self.beliefs.normalize()
         
@@ -516,10 +505,7 @@ class JointParticleFilter(ParticleFilter):
 
         if self.beliefs.total() == 0:
             self.initializeUniformly(gameState)
-        
-        samples = [self.beliefs.sample() for _ in range(self.numParticles)]
-        for i in range(len(self.combine_multi_pos)):
-            self.particles[i] = samples.count(self.combine_multi_pos[i])
+        self.particles = [self.beliefs.sample() for _ in range(self.numParticles)]
 
 
     def elapseTime(self, gameState):
@@ -528,23 +514,19 @@ class JointParticleFilter(ParticleFilter):
         gameState.
         """
         newParticles = []
-
         for oldParticle in self.particles:
             newParticle = list(oldParticle)  # A list of ghost positions
-            pass
             # now loop through and update each entry in newParticle...
             # "*** YOUR CODE HERE ***"
-            '''
             for i in range(self.numGhosts):
-                sampled_pos = []
-                for prevGhostPositions in self.legalPositions
-                    newPosDist = self.getPositionDistribution(gameState, prevGhostPositions, i, self.ghostAgents[i])
-                    sampled_pos.append(newPosDist.sample())
-            '''
-
+                newPosDist = self.getPositionDistribution(gameState, newParticle, i, self.ghostAgents[i])
+                newParticle[i] = newPosDist.sample()
             """*** END YOUR CODE HERE ***"""
             newParticles.append(tuple(newParticle))
         self.particles = newParticles
+        for pos in self.combine_multi_pos:
+            self.beliefs[pos] = self.particles.count(pos) / self.numParticles
+        self.beliefs.normalize()
 
 
 # One JointInference module is shared globally across instances of MarginalInference
