@@ -452,15 +452,15 @@ class JointParticleFilter(ParticleFilter):
         # "*** YOUR CODE HERE ***"
         self.beliefs = DiscreteDistribution()
         multi_legalPositions = [self.legalPositions[:] for _ in range(self.numGhosts)]
-        combine_multi_pos = list(itertools.product(*multi_legalPositions))
-        random.shuffle(combine_multi_pos)
+        self.combine_multi_pos = list(itertools.product(*multi_legalPositions))
+        random.shuffle(self.combine_multi_pos)
 
-        num_pos = len(combine_multi_pos)
+        num_pos = len(self.combine_multi_pos)
         for i in range(num_pos):
             self.particles.append(0)
         for i in range(self.numParticles):
             self.particles[i%num_pos] += 1
-        for i, p in enumerate(combine_multi_pos):
+        for i, p in enumerate(self.combine_multi_pos):
             self.beliefs[p] = self.particles[i] / self.numParticles
         self.beliefs.normalize()
         
@@ -497,39 +497,24 @@ class JointParticleFilter(ParticleFilter):
         """
         # "*** YOUR CODE HERE ***"
         pacmanPosition = gameState.getPacmanPosition()
+        temp_beliefs = self.beliefs
         
-        print(observation)
-
-
-        '''
         for i in range(self.numGhosts):
             jailPosition = self.getJailPosition(i)
-            weight = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
-
-
-
-        if self.beliefs.total() == 0:
-            self.initializeUniformly(gameState)
-
-
-
-
-        temp_beliefs = self.beliefs
-        for ghostPosition in self.legalPositions:
-            weight = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
-            temp_beliefs[ghostPosition] *= weight
+            for ghostPosition in self.legalPositions:
+                weight = self.getObservationProb(observation[i], pacmanPosition, ghostPosition, jailPosition)
+                for pos in self.combine_multi_pos:
+                    if pos[i] == ghostPosition:
+                        temp_beliefs[pos] *= weight
         self.beliefs = temp_beliefs
         self.beliefs.normalize()
 
-        if self.beliefs.total() == 0:       # if total weight is zero, updated self.beliefs should also be zero
+        if self.beliefs.total() == 0:
             self.initializeUniformly(gameState)
         
         samples = [self.beliefs.sample() for _ in range(self.numParticles)]
-        for i in range(len(self.legalPositions)):
-            self.particles[i] = samples.count(self.legalPositions[i])
-        '''
-
-
+        for i in range(len(self.combine_multi_pos)):
+            self.particles[i] = samples.count(self.combine_multi_pos[i])
 
 
     def elapseTime(self, gameState):
