@@ -363,7 +363,7 @@ class ParticleFilter(InferenceModule):
         for i, p in enumerate(self.legalPositions):
             self.beliefs[p] = self.particles[i] / self.numParticles
         self.beliefs.normalize()
-        assert sum(self.particles) == self.numParticles
+        #assert sum(self.particles) == self.numParticles
         
 
     def observeUpdate(self, observation, gameState):
@@ -403,7 +403,6 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         # "*** YOUR CODE HERE ***"
-        import time
         particle_samples = []
         for i, oldPos in enumerate(self.legalPositions):
             newPosDist = self.getPositionDistribution(gameState, oldPos)
@@ -450,7 +449,21 @@ class JointParticleFilter(ParticleFilter):
         uniform prior.
         """
         self.particles = []
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.beliefs = DiscreteDistribution()
+        multi_legalPositions = [self.legalPositions[:] for _ in range(self.numGhosts)]
+        combine_multi_pos = list(itertools.product(*multi_legalPositions))
+        random.shuffle(combine_multi_pos)
+
+        num_pos = len(combine_multi_pos)
+        for i in range(num_pos):
+            self.particles.append(0)
+        for i in range(self.numParticles):
+            self.particles[i%num_pos] += 1
+        for i, p in enumerate(combine_multi_pos):
+            self.beliefs[p] = self.particles[i] / self.numParticles
+        self.beliefs.normalize()
+        
 
     def addGhostAgent(self, agent):
         """
@@ -482,7 +495,42 @@ class JointParticleFilter(ParticleFilter):
         be reinitialized by calling initializeUniformly. The total method of
         the DiscreteDistribution may be useful.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        pacmanPosition = gameState.getPacmanPosition()
+        
+        print(observation)
+
+
+        '''
+        for i in range(self.numGhosts):
+            jailPosition = self.getJailPosition(i)
+            weight = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
+
+
+
+        if self.beliefs.total() == 0:
+            self.initializeUniformly(gameState)
+
+
+
+
+        temp_beliefs = self.beliefs
+        for ghostPosition in self.legalPositions:
+            weight = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
+            temp_beliefs[ghostPosition] *= weight
+        self.beliefs = temp_beliefs
+        self.beliefs.normalize()
+
+        if self.beliefs.total() == 0:       # if total weight is zero, updated self.beliefs should also be zero
+            self.initializeUniformly(gameState)
+        
+        samples = [self.beliefs.sample() for _ in range(self.numParticles)]
+        for i in range(len(self.legalPositions)):
+            self.particles[i] = samples.count(self.legalPositions[i])
+        '''
+
+
+
 
     def elapseTime(self, gameState):
         """
