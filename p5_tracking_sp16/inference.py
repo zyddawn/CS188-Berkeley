@@ -77,7 +77,7 @@ class DiscreteDistribution(dict):
         """
         # "*** YOUR CODE HERE ***"
         sumn = self.total()
-        if sumn > 0:
+        if sumn > 0 and sumn != 1.0:
             for key in self:
                 self[key] /= sumn
 
@@ -104,11 +104,13 @@ class DiscreteDistribution(dict):
         0.0
         """
         # "*** YOUR CODE HERE ***"
-        copy_self = self.copy()
-        self.normalize()
-        res = np.random.choice(self.keys(), 1, p=self.values())
-        self = copy_self
-        return res
+        prob = random.random()
+        cur = 0
+        for key in self:
+            if cur <= prob < cur+self[key]:
+                return key
+            cur += self[key]
+        return None
 
 
 class InferenceModule:
@@ -351,8 +353,18 @@ class ParticleFilter(InferenceModule):
         self.particles for the list of particles.
         """
         self.particles = []
-        "*** YOUR CODE HERE ***"
-
+        # "*** YOUR CODE HERE ***"
+        self.beliefs = DiscreteDistribution()
+        num_pos = len(self.legalPositions)
+        for i in range(num_pos):
+            self.particles.append(0)
+        for i in range(self.numParticles):
+            self.particles[i%num_pos] += 1
+        for i, p in enumerate(self.legalPositions):
+            self.beliefs[p] = self.particles[i] / self.numParticles
+        self.beliefs.normalize()
+        assert sum(self.particles) == self.numParticles
+        
 
     def observeUpdate(self, observation, gameState):
         """
@@ -366,14 +378,43 @@ class ParticleFilter(InferenceModule):
         be reinitialized by calling initializeUniformly. The total method of
         the DiscreteDistribution may be useful.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        pacmanPosition = gameState.getPacmanPosition()
+        jailPosition = self.getJailPosition()
+
+        temp_beliefs = self.beliefs
+        for ghostPosition in self.legalPositions:
+            weight = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
+            temp_beliefs[ghostPosition] *= weight
+        self.beliefs = temp_beliefs
+        self.beliefs.normalize()
+
+        if self.beliefs.total() == 0:       # if total weight is zero, updated self.beliefs should also be zero
+            self.initializeUniformly(gameState)
+        
+        samples = [self.beliefs.sample() for _ in range(self.numParticles)]
+        for i in range(len(self.legalPositions)):
+            self.particles[i] = samples.count(self.legalPositions[i])
+
 
     def elapseTime(self, gameState):
         """
         Sample each particle's next state based on its current state and the
         gameState.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        import time
+        particle_samples = []
+        for i, oldPos in enumerate(self.legalPositions):
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            particle_num = self.particles[i]
+            for _ in range(particle_num):
+                new_sample = newPosDist.sample()
+                particle_samples.append(new_sample)
+        for i, Pos in enumerate(self.legalPositions):
+            self.particles[i] = particle_samples.count(Pos)
+            self.beliefs[Pos] = self.particles[i] / self.numParticles
+
 
     def getBeliefDistribution(self):
         """
@@ -381,7 +422,8 @@ class ParticleFilter(InferenceModule):
         locations conditioned on all evidence and time passage. This method
         essentially converts a list of particles into a belief distribution.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return self.beliefs
 
 
 class JointParticleFilter(ParticleFilter):
