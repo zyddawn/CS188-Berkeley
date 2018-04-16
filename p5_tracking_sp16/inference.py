@@ -454,14 +454,19 @@ class JointParticleFilter(ParticleFilter):
         multi_legalPositions = [self.legalPositions[:] for _ in range(self.numGhosts)]
         self.combine_multi_pos = list(itertools.product(*multi_legalPositions))
         random.shuffle(self.combine_multi_pos)
-
+        
         num_pos = len(self.combine_multi_pos)
+        '''
         for i in range(num_pos):
             self.particles.append(0)
         for i in range(self.numParticles):
             self.particles[i%num_pos] += 1
-        for i, p in enumerate(self.combine_multi_pos):
-            self.beliefs[p] = self.particles[i] / self.numParticles
+        '''
+        for i in range(self.numParticles):
+            self.particles.append(self.combine_multi_pos[i%num_pos])
+        for i, pos in enumerate(self.combine_multi_pos):
+            # self.beliefs[p] = self.particles[i] / self.numParticles
+            self.beliefs[pos] = self.particles.count(pos) / self.numParticles
         self.beliefs.normalize()
         
 
@@ -498,7 +503,7 @@ class JointParticleFilter(ParticleFilter):
         # "*** YOUR CODE HERE ***"
         pacmanPosition = gameState.getPacmanPosition()
         temp_beliefs = self.beliefs
-        
+
         for i in range(self.numGhosts):
             jailPosition = self.getJailPosition(i)
             for ghostPosition in self.legalPositions:
@@ -523,11 +528,19 @@ class JointParticleFilter(ParticleFilter):
         gameState.
         """
         newParticles = []
+
         for oldParticle in self.particles:
             newParticle = list(oldParticle)  # A list of ghost positions
-
+            pass
             # now loop through and update each entry in newParticle...
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            '''
+            for i in range(self.numGhosts):
+                sampled_pos = []
+                for prevGhostPositions in self.legalPositions
+                    newPosDist = self.getPositionDistribution(gameState, prevGhostPositions, i, self.ghostAgents[i])
+                    sampled_pos.append(newPosDist.sample())
+            '''
 
             """*** END YOUR CODE HERE ***"""
             newParticles.append(tuple(newParticle))
