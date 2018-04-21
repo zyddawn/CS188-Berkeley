@@ -2,6 +2,8 @@ import numpy as np
 
 import backend
 
+import time
+
 
 class Perceptron(object):
     def __init__(self, dimensions):
@@ -17,7 +19,8 @@ class Perceptron(object):
         """
         self.get_data_and_monitor = backend.make_get_data_and_monitor_perceptron()
 
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.weight = np.zeros(dimensions)
 
     def get_weights(self):
         """
@@ -28,7 +31,8 @@ class Perceptron(object):
         Returns: a numpy array with D elements, where D is the value of the
             `dimensions` parameter passed to Perceptron.__init__
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return self.weight
 
     def predict(self, x):
         """
@@ -38,7 +42,9 @@ class Perceptron(object):
 
         Returns: 1 or -1
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        pred = np.dot(x.T, self.weight)
+        return 1 if pred >= 0 else -1
 
     def update(self, x, y):
         """
@@ -52,7 +58,11 @@ class Perceptron(object):
         Returns:
             True if the perceptron weights have changed, False otherwise
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        if self.predict(x) == y:
+            return False
+        self.weight += y * x
+        return True
 
     def train(self):
         """
@@ -69,4 +79,19 @@ class Perceptron(object):
         perceptron as an argument so that it can monitor performance and display
         graphics in between yielding data points.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+
+        train_over = False
+        cnt = 0
+        while not train_over:
+            train_over = True
+            cnt = 0
+            for x, y in self.get_data_and_monitor(self):
+                if self.update(x, y):
+                    cnt += 1
+                    train_over = False
+            if not train_over:
+                self.get_data_and_monitor = backend.make_get_data_and_monitor_perceptron()
+
+
+
