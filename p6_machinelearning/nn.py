@@ -23,7 +23,6 @@ def main():
     # Here m and b are variables (trainable parameters):
     m = Variable(2, 1)
     b = Variable(1)
-
     # We train our network using batch gradient descent on our data
     for iteration in range(10000):
         # At each iteration, we first calculate a loss that measures how
@@ -205,10 +204,9 @@ class Graph(object):
         """
         # "*** YOUR CODE HERE ***"
         for node in self.get_nodes():
-            if isinstance(node, DataNode):
+            if isinstance(node, Variable):
                 self.outputs[node] -= step_size * self.gradients[node]
-                self.gradients[node] = np.zeros_like(self.gradients[node])
-
+                
 
 class DataNode(object):
     """
