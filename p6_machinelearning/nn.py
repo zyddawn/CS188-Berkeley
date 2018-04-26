@@ -80,7 +80,13 @@ class Graph(object):
         Hint: each Variable is also a node that needs to be added to the graph,
         so don't forget to call `self.add` on each of the variables.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.nodes = []
+        self.outputs = {}
+        self.gradients = {}
+        for node in variables:
+            self.add(node)
+
 
     def get_nodes(self):
         """
@@ -92,7 +98,8 @@ class Graph(object):
 
         Returns: a list of nodes
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return self.nodes
 
     def get_inputs(self, node):
         """
@@ -105,7 +112,9 @@ class Graph(object):
 
         Hint: every node has a `.get_parents()` method
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return [self.outputs[p] for p in node.get_parents()]
+
 
     def get_output(self, node):
         """
@@ -116,7 +125,8 @@ class Graph(object):
 
         Returns: a numpy array or a scalar
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return self.outputs[node]
 
     def get_gradient(self, node):
         """
@@ -133,7 +143,9 @@ class Graph(object):
 
         Returns: a numpy array
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return self.gradients[node]
+
 
     def add(self, node):
         """
@@ -149,7 +161,11 @@ class Graph(object):
         Additionally, this method should initialize an all-zero gradient
         accumulator for the node, with correct shape.
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.nodes.append(node)
+        self.outputs[node] = node.forward(self.get_inputs(node))
+        self.gradients[node] = np.zeros_like(self.outputs[node])
+
 
     def backprop(self):
         """
@@ -167,8 +183,15 @@ class Graph(object):
         """
         loss_node = self.get_nodes()[-1]
         assert np.asarray(self.get_output(loss_node)).ndim == 0
+        # "*** YOUR CODE HERE ***"
+        self.gradients[loss_node] = 1.0
+        accum_grad = self.gradients[loss_node]
+        for rev_node in self.get_nodes()[::-1]:
+            accum_grad = self.get_gradient(rev_node)
+            parents_grad = rev_node.backward(self.get_inputs(rev_node), accum_grad)
+            for i, p in enumerate(rev_node.get_parents()):
+                self.gradients[p] += parents_grad[i]        # robust even when two input nodes are the same
 
-        "*** YOUR CODE HERE ***"
 
     def step(self, step_size):
         """
@@ -180,7 +203,11 @@ class Graph(object):
 
         Hint: each Variable has a `.data` attribute
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        for node in self.get_nodes():
+            if isinstance(node, DataNode):
+                self.outputs[node] -= step_size * self.gradients[node]
+                self.gradients[node] = np.zeros_like(self.gradients[node])
 
 
 class DataNode(object):
