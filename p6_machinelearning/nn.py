@@ -285,12 +285,14 @@ class Add(FunctionNode):
 
     @staticmethod
     def forward(inputs):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return inputs[0] + inputs[1]
 
     @staticmethod
     def backward(inputs, gradient):
-        "*** YOUR CODE HERE ***"
-
+        # "*** YOUR CODE HERE ***"
+        return [gradient, gradient]
+        
 
 class MatrixMultiply(FunctionNode):
     """
@@ -306,11 +308,14 @@ class MatrixMultiply(FunctionNode):
 
     @staticmethod
     def forward(inputs):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return np.dot(inputs[0], inputs[1])
 
     @staticmethod
     def backward(inputs, gradient):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return [np.dot(gradient, inputs[1].T), 
+                np.dot(inputs[0].T, gradient)]
 
 
 class MatrixVectorAdd(FunctionNode):
@@ -327,11 +332,13 @@ class MatrixVectorAdd(FunctionNode):
 
     @staticmethod
     def forward(inputs):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return inputs[0] + inputs[1]
 
     @staticmethod
     def backward(inputs, gradient):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return [gradient, np.sum(gradient, axis=0)]
 
 
 class ReLU(FunctionNode):
@@ -348,12 +355,17 @@ class ReLU(FunctionNode):
 
     @staticmethod
     def forward(inputs):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        filter_x = inputs[0].copy()
+        filter_x[np.where(inputs[0] <= 0)] = 0
+        return filter_x
 
     @staticmethod
     def backward(inputs, gradient):
-        "*** YOUR CODE HERE ***"
-
+        # "*** YOUR CODE HERE ***"
+        filter_d = np.ones(np.shape(inputs[0]))
+        filter_d[np.where(inputs[0] <= 0)] = 0
+        return [gradient * filter_d]
 
 class SquareLoss(FunctionNode):
     """
@@ -371,11 +383,16 @@ class SquareLoss(FunctionNode):
 
     @staticmethod
     def forward(inputs):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        return np.mean((inputs[0] - inputs[1])**2) / 2
 
     @staticmethod
     def backward(inputs, gradient):
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        diff = inputs[0] - inputs[1]
+        n, m = np.shape(diff)
+        num = n * m
+        return [gradient * diff / num, - gradient * diff / num]
 
 
 class SoftmaxLoss(FunctionNode):
