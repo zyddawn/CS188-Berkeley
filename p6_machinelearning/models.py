@@ -46,7 +46,7 @@ class RegressionModel(Model):
         # Remember to set self.learning_rate!
         # You may use any learning rate that works well for your architecture
         # "*** YOUR CODE HERE ***"
-        self.learning_rate = 0.005
+        self.learning_rate = 0.01
         self.W1 = nn.Variable(1, 20)
         self.b1 = nn.Variable(1, 20)
         self.W2 = nn.Variable(20, 10)
@@ -79,15 +79,15 @@ class RegressionModel(Model):
         
         graph = nn.Graph([self.W1, self.b1, self.W2, self.b2, self.W3, self.b3])
         input_x = nn.Input(graph, x)
-        
+        # layer 1
         xm = nn.MatrixMultiply(graph, input_x, self.W1)
         xm_plus_b = nn.MatrixVectorAdd(graph, xm, self.b1)
         a1 = nn.ReLU(graph, xm_plus_b)
-        
+        # layer 2
         a1m = nn.MatrixMultiply(graph, a1, self.W2)
         a1m_plus_b = nn.MatrixVectorAdd(graph, a1m, self.b2)
         a2 = nn.ReLU(graph, a1m_plus_b)
-
+        # layer 3
         a2m = nn.MatrixMultiply(graph, a2, self.W3)
         a2m_plus_b = nn.MatrixVectorAdd(graph, a2m, self.b3)
 
