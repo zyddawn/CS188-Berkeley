@@ -204,7 +204,7 @@ class Graph(object):
         """
         # "*** YOUR CODE HERE ***"
         for node in self.get_nodes():
-            if isinstance(node, Variable):
+            if isinstance(node, Variable):                  # only update trainable parameters
                 self.outputs[node] -= step_size * self.gradients[node]
                 
 
