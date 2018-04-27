@@ -231,6 +231,10 @@ def get_data_and_monitor_digit_classification(model):
         if log:
             print("epoch {:.2f}/{:.2f} validation-accuracy {:.2%}".format(
                 epoch, epochs, dev_accuracy))
+            if model.prev_acc > dev_accuracy:
+                model.learning_rate *= 0.8
+                # print("Learning_rate = {}".format(model.learning_rate))
+            model.prev_acc = dev_accuracy
 
         if use_graphics:
             status.set_text("epoch: {:.2f}/{:.2f}, validation-accuracy: {:.2%}".format(

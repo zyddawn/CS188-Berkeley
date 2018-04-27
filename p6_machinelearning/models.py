@@ -231,7 +231,15 @@ class DigitClassificationModel(Model):
 
         # Remember to set self.learning_rate!
         # You may use any learning rate that works well for your architecture
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.learning_rate = 0.5
+        self.W1 = nn.Variable(784, 256)
+        self.b1 = nn.Variable(1, 256)
+        self.W2 = nn.Variable(256, 256)
+        self.b2 = nn.Variable(1, 256)
+        self.W3 = nn.Variable(256, 10)
+        self.b3 = nn.Variable(1, 10)
+        self.prev_acc = 0.0     # used for learning rate decay
 
     def run(self, x, y=None):
         """
@@ -257,12 +265,30 @@ class DigitClassificationModel(Model):
                 the loss
             (if y is None) A (batch_size x 10) numpy array of scores (aka logits)
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        graph = nn.Graph([self.W1, self.b1, self.W2, self.b2, self.W3, self.b3])
+        input_x = nn.Input(graph, x)
+        # layer 1
+        xm = nn.MatrixMultiply(graph, input_x, self.W1)
+        xm_plus_b = nn.MatrixVectorAdd(graph, xm, self.b1)
+        a1 = nn.ReLU(graph, xm_plus_b)
+        # layer 2
+        a1m = nn.MatrixMultiply(graph, a1, self.W2)
+        a1m_plus_b = nn.MatrixVectorAdd(graph, a1m, self.b2)
+        a2 = nn.ReLU(graph, a1m_plus_b)
+        # layer 3
+        a2m = nn.MatrixMultiply(graph, a2, self.W3)
+        a2m_plus_b = nn.MatrixVectorAdd(graph, a2m, self.b3)
 
         if y is not None:
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            input_y = nn.Input(graph, y)
+            loss = nn.SoftmaxLoss(graph, a2m_plus_b, input_y)
+            
+            return graph
         else:
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            return graph.get_output(a2m_plus_b)
 
 
 class DeepQModel(Model):
