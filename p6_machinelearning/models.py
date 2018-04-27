@@ -284,7 +284,6 @@ class DigitClassificationModel(Model):
             # "*** YOUR CODE HERE ***"
             input_y = nn.Input(graph, y)
             loss = nn.SoftmaxLoss(graph, a2m_plus_b, input_y)
-            
             return graph
         else:
             # "*** YOUR CODE HERE ***"
@@ -311,7 +310,14 @@ class DeepQModel(Model):
 
         # Remember to set self.learning_rate!
         # You may use any learning rate that works well for your architecture
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.learning_rate = 0.01
+        self.W1 = nn.Variable(4, 20)
+        self.b1 = nn.Variable(1, 20)
+        self.W2 = nn.Variable(20, 10)
+        self.b2 = nn.Variable(1, 10)
+        self.W3 = nn.Variable(10, 2)
+        self.b3 = nn.Variable(1, 2)
 
     def run(self, states, Q_target=None):
         """
@@ -340,12 +346,30 @@ class DeepQModel(Model):
             (if Q_target is None) A (batch_size x 2) numpy array of Q-value
                 scores, for the two actions
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        graph = nn.Graph([self.W1, self.b1, self.W2, self.b2, self.W3, self.b3])
+        input_x = nn.Input(graph, states)
+        # layer 1
+        xm = nn.MatrixMultiply(graph, input_x, self.W1)
+        xm_plus_b = nn.MatrixVectorAdd(graph, xm, self.b1)
+        a1 = nn.ReLU(graph, xm_plus_b)
+        # layer 2
+        a1m = nn.MatrixMultiply(graph, a1, self.W2)
+        a1m_plus_b = nn.MatrixVectorAdd(graph, a1m, self.b2)
+        a2 = nn.ReLU(graph, a1m_plus_b)
+        # layer 3
+        a2m = nn.MatrixMultiply(graph, a2, self.W3)
+        a2m_plus_b = nn.MatrixVectorAdd(graph, a2m, self.b3)
 
         if Q_target is not None:
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            input_y = nn.Input(graph, Q_target)
+            loss = nn.SquareLoss(graph, a2m_plus_b, input_y)
+            return graph
         else:
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            return graph.get_output(a2m_plus_b)
+
 
     def get_action(self, state, eps):
         """
