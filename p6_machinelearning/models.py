@@ -413,6 +413,9 @@ class LanguageIDModel(Model):
         # Remember to set self.learning_rate!
         # You may use any learning rate that works well for your architecture
         "*** YOUR CODE HERE ***"
+        self.learning_rate = 0.01
+
+
 
     def run(self, xs, y=None):
         """
@@ -454,10 +457,17 @@ class LanguageIDModel(Model):
         Hint: you may use the batch_size variable in your code
         """
         batch_size = xs[0].shape[0]
-
         "*** YOUR CODE HERE ***"
 
         if y is not None:
             "*** YOUR CODE HERE ***"
         else:
             "*** YOUR CODE HERE ***"
+
+
+
+
+
+
+
+
