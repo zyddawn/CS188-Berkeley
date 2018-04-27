@@ -127,7 +127,14 @@ class OddRegressionModel(Model):
 
         # Remember to set self.learning_rate!
         # You may use any learning rate that works well for your architecture
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        self.learning_rate = 0.05
+        self.W1 = nn.Variable(1, 20)
+        self.b1 = nn.Variable(1, 20)
+        self.W2 = nn.Variable(20, 10)
+        self.b2 = nn.Variable(1, 10)
+        self.W3 = nn.Variable(10, 1)
+        self.b3 = nn.Variable(1, 1)
 
     def run(self, x, y=None):
         """
@@ -150,18 +157,55 @@ class OddRegressionModel(Model):
 
         Note: DO NOT call backprop() or step() inside this method!
         """
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        graph = nn.Graph([self.W1, self.b1, self.W2, self.b2, self.W3, self.b3])
+        # pos input
+        pinput_x = nn.Input(graph, x)
+        # layer 1
+        pxm = nn.MatrixMultiply(graph, pinput_x, self.W1)
+        pxm_plus_b = nn.MatrixVectorAdd(graph, pxm, self.b1)
+        pa1 = nn.ReLU(graph, pxm_plus_b)
+        # layer 2
+        pa1m = nn.MatrixMultiply(graph, pa1, self.W2)
+        pa1m_plus_b = nn.MatrixVectorAdd(graph, pa1m, self.b2)
+        pa2 = nn.ReLU(graph, pa1m_plus_b)
+        # layer 3
+        pa2m = nn.MatrixMultiply(graph, pa2, self.W3)
+        pa2m_plus_b = nn.MatrixVectorAdd(graph, pa2m, self.b3)
+        
+        # neg input
+        ninput_x = nn.Input(graph, -x)
+        # layer 1
+        nxm = nn.MatrixMultiply(graph, ninput_x, self.W1)
+        nxm_plus_b = nn.MatrixVectorAdd(graph, nxm, self.b1)
+        na1 = nn.ReLU(graph, nxm_plus_b)
+        # layer 2
+        na1m = nn.MatrixMultiply(graph, na1, self.W2)
+        na1m_plus_b = nn.MatrixVectorAdd(graph, na1m, self.b2)
+        na2 = nn.ReLU(graph, na1m_plus_b)
+        # layer 3
+        na2m = nn.MatrixMultiply(graph, na2, self.W3)
+        na2m_plus_b = nn.MatrixVectorAdd(graph, na2m, self.b3)
+
+        # output
+        neg_op = nn.Input(graph, -np.ones((1, 1)))
+        neg_na2m_plus_b = nn.MatrixMultiply(graph, na2m_plus_b, neg_op)         # a helper function
+        output = nn.Add(graph, pa2m_plus_b, neg_na2m_plus_b)
 
         if y is not None:
             # At training time, the correct output `y` is known.
             # Here, you should construct a loss node, and return the nn.Graph
             # that the node belongs to. The loss node must be the last node
             # added to the graph.
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            input_y = nn.Input(graph, y)
+            loss = nn.SquareLoss(graph, output, input_y)
+            return graph
         else:
             # At test time, the correct output is unknown.
             # You should instead return your model's prediction as a numpy array
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            return graph.get_output(output)
 
 
 class DigitClassificationModel(Model):

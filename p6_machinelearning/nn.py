@@ -311,13 +311,45 @@ class Add(FunctionNode):
     @staticmethod
     def forward(inputs):
         # "*** YOUR CODE HERE ***"
+        # print(type(inputs[0][0][0]))
+        # if inputs[0][0][0] is np.nan:
+        #    raw_input()
+        # print(inputs[0])
         return inputs[0] + inputs[1]
 
     @staticmethod
     def backward(inputs, gradient):
         # "*** YOUR CODE HERE ***"
         return [gradient, gradient]
-        
+
+'''
+class Negate(FunctionNode):
+    """
+    TODO: Question 2 - [Neural Network] Nodes
+
+    Negate one vectors or matrices, element-wise
+
+    Inputs: [x]
+        x may represent either a vector or a matrix
+    Output: - x
+    """
+
+    @staticmethod
+    def forward(inputs):
+        # "*** YOUR CODE HERE ***"
+        # print("Negate")
+        # print("origin: ", inputs[0])
+        # print("negate: ", -1 * inputs[0])
+        return -1 * inputs[0]
+
+    @staticmethod
+    def backward(inputs, gradient):
+        # "*** YOUR CODE HERE ***"
+        # print("Negate")
+        # print("origin: ", gradient)
+        # print("negate: ", gradient)
+        return -1 * gradient
+'''
 
 class MatrixMultiply(FunctionNode):
     """
