@@ -412,10 +412,14 @@ class LanguageIDModel(Model):
 
         # Remember to set self.learning_rate!
         # You may use any learning rate that works well for your architecture
-        "*** YOUR CODE HERE ***"
-        self.learning_rate = 0.01
-
-
+        # "*** YOUR CODE HERE ***"
+        self.learning_rate = 0.005
+        self.hidden_size = 180
+        self.Whh = nn.Variable(self.hidden_size, self.hidden_size)
+        self.Wch = nn.Variable(self.num_chars, self.hidden_size)
+        self.bh = nn.Variable(1, self.hidden_size)
+        self.W1 = nn.Variable(self.hidden_size, 5)
+        self.b1 = nn.Variable(1, 5)
 
     def run(self, xs, y=None):
         """
@@ -457,13 +461,31 @@ class LanguageIDModel(Model):
         Hint: you may use the batch_size variable in your code
         """
         batch_size = xs[0].shape[0]
-        "*** YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        word_length = np.shape(xs)[0]
+        graph = nn.Graph([self.Whh, self.Wch, self.bh, self.W1, self.b1])
+        ht_1 = nn.Input(graph, np.zeros((batch_size, self.hidden_size)))
+        # RNN
+        for i in range(word_length):
+            input_x = nn.Input(graph, xs[i])
+            wct = nn.MatrixMultiply(graph, input_x, self.Wch)
+            wht_1 = nn.MatrixMultiply(graph, ht_1, self.Whh)
+            comb = nn.Add(graph, wct, wht_1)
+            add_bias = nn.MatrixVectorAdd(graph, comb, self.bh)
+            ht = nn.ReLU(graph, add_bias)
+            ht_1 = ht
+        # classification
+        comb_features = nn.MatrixMultiply(graph, ht, self.W1)
+        outputs = nn.MatrixVectorAdd(graph, comb_features, self.b1)
 
         if y is not None:
-            "*** YOUR CODE HERE ***"
+            # "*** YOUR CODE HERE ***"
+            input_y = nn.Input(graph, y)
+            loss = nn.SoftmaxLoss(graph, outputs, input_y)
+            return graph
         else:
-            "*** YOUR CODE HERE ***"
-
+            # "*** YOUR CODE HERE ***"
+            return graph.get_output(outputs)
 
 
 
